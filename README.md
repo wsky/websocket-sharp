@@ -1,3 +1,12 @@
+## changelog
+
+- 20120114 by wsky
+  - upgrad proj-file to vs2012
+	- make it support .net20 at branch:net20.
+	- add unittests
+
+get more, checkout net20 https://github.com/wsky/websocket-sharp/tree/net20
+
 # websocket-sharp #
 
 **websocket-sharp** is a C# implementation of the WebSocket protocol client & server.
