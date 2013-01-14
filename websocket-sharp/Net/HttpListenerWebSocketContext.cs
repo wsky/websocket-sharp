@@ -31,121 +31,155 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Security.Principal;
 
-namespace WebSocketSharp.Net {
-
-  public class HttpListenerWebSocketContext : WebSocketContext
-  {
-    private HttpListenerContext _context;
-    private WebSocket           _socket;
-    private WsStream            _stream;
-
-    internal HttpListenerWebSocketContext(HttpListenerContext context)
+namespace WebSocketSharp.Net
+{
+    public class HttpListenerWebSocketContext : WebSocketContext
     {
-      _context = context;
-      _stream  = WsStream.CreateServerStream(context);
-      _socket  = new WebSocket(this);
-    }
+        private HttpListenerContext _context;
+        private WebSocket _socket;
+        private WsStream _stream;
 
-    internal HttpListenerContext BaseContext {
-      get {
-        return _context;
-      }
-    }
+        internal HttpListenerWebSocketContext(HttpListenerContext context)
+        {
+            _context = context;
+            _stream = WsStream.CreateServerStream(context);
+            _socket = new WebSocket(this);
+        }
 
-    internal WsStream Stream {
-      get {
-        return _stream;
-      }
-    }
+        internal HttpListenerContext BaseContext
+        {
+            get
+            {
+                return _context;
+            }
+        }
 
-    public override CookieCollection CookieCollection {
-      get {
-        return _context.Request.Cookies;
-      }
-    }
+        internal WsStream Stream
+        {
+            get
+            {
+                return _stream;
+            }
+        }
 
-    public override NameValueCollection Headers {
-      get {
-        return _context.Request.Headers;
-      }
-    }
+        public override CookieCollection CookieCollection
+        {
+            get
+            {
+                return _context.Request.Cookies;
+            }
+        }
 
-    public override bool IsAuthenticated {
-      get {
-        return _context.Request.IsAuthenticated;
-      }
-    }
+        public override NameValueCollection Headers
+        {
+            get
+            {
+                return _context.Request.Headers;
+            }
+        }
 
-    public override bool IsSecureConnection {
-      get {
-        return _context.Request.IsSecureConnection;
-      }
-    }
+        public override bool IsAuthenticated
+        {
+            get
+            {
+                return _context.Request.IsAuthenticated;
+            }
+        }
 
-    public override bool IsLocal {
-      get {
-        return _context.Request.IsLocal;
-      }
-    }
+        public override bool IsSecureConnection
+        {
+            get
+            {
+                return _context.Request.IsSecureConnection;
+            }
+        }
 
-    public override string Origin {
-      get {
-        return Headers["Origin"];
-      }
-    }
+        public override bool IsLocal
+        {
+            get
+            {
+                return _context.Request.IsLocal;
+            }
+        }
 
-    public virtual string Path {
-      get {
-        return RequestUri.GetAbsolutePath();
-      }
-    }
+        public override string Origin
+        {
+            get
+            {
+                return Headers["Origin"];
+            }
+        }
 
-    public override Uri RequestUri {
-      get {
-        return _context.Request.RawUrl.ToUri();
-      }
-    }
+        public virtual string Path
+        {
+            get
+            {
+                return Ext.GetAbsolutePath(RequestUri);
+            }
+        }
 
-    public override string SecWebSocketKey {
-      get {
-        return Headers["Sec-WebSocket-Key"];
-      }
-    }
+        public override Uri RequestUri
+        {
+            get
+            {
+                return Ext.ToUri(_context.Request.RawUrl);
+            }
+        }
 
-    public override IEnumerable<string> SecWebSocketProtocols {
-      get {
-        return Headers.GetValues("Sec-WebSocket-Protocol");
-      }
-    }
+        public override string SecWebSocketKey
+        {
+            get
+            {
+                return Headers["Sec-WebSocket-Key"];
+            }
+        }
 
-    public override string SecWebSocketVersion {
-      get {
-        return Headers["Sec-WebSocket-Version"];
-      }
-    }
+        public override IEnumerable<string> SecWebSocketProtocols
+        {
+            get
+            {
+                return Headers.GetValues("Sec-WebSocket-Protocol");
+            }
+        }
 
-    public virtual System.Net.IPEndPoint ServerEndPoint {
-      get {
-        return _context.Connection.LocalEndPoint;
-      }
-    }
+        public override string SecWebSocketVersion
+        {
+            get
+            {
+                return Headers["Sec-WebSocket-Version"];
+            }
+        }
 
-    public override IPrincipal User {
-      get {
-        return _context.User;
-      }
-    }
+        public virtual System.Net.IPEndPoint ServerEndPoint
+        {
+            get
+            {
+                return _context.Connection.LocalEndPoint;
+            }
+        }
 
-    public virtual System.Net.IPEndPoint UserEndPoint {
-      get {
-        return _context.Connection.RemoteEndPoint;
-      }
-    }
+        public override IPrincipal User
+        {
+            get
+            {
+                return _context.User;
+            }
+        }
 
-    public override WebSocket WebSocket {
-      get {
-        return _socket;
-      }
+        public virtual System.Net.IPEndPoint UserEndPoint
+        {
+            get
+            {
+                return _context.Connection.RemoteEndPoint;
+            }
+        }
+
+        public override WebSocket WebSocket
+        {
+            get
+            {
+                return _socket;
+            }
+        }
     }
-  }
 }

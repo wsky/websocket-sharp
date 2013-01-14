@@ -33,147 +33,153 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using WebSocketSharp.Net;
 
-namespace WebSocketSharp.Server {
+namespace WebSocketSharp.Server
+{
 
-  public class WebSocketServer : WebSocketServerBase
-  {
-    #region Field
-
-    private ServiceManager _services;
-
-    #endregion
-
-    #region Public Constructors
-
-    public WebSocketServer()
-      : this(80)
+    public class WebSocketServer : WebSocketServerBase
     {
+        #region Field
+
+        private ServiceManager _services;
+
+        #endregion
+
+        #region Public Constructors
+
+        public WebSocketServer()
+            : this(80)
+        {
+        }
+
+        public WebSocketServer(int port)
+            : this(System.Net.IPAddress.Any, port)
+        {
+        }
+
+        public WebSocketServer(string url)
+            : base(url)
+        {
+            if (BaseUri.AbsolutePath != "/")
+            {
+                var msg = "Must not contain the path component: " + url;
+                throw new ArgumentException(msg, "url");
+            }
+
+            init();
+        }
+
+        public WebSocketServer(int port, bool secure)
+            : this(System.Net.IPAddress.Any, port, secure)
+        {
+        }
+
+        public WebSocketServer(System.Net.IPAddress address, int port)
+            : this(address, port, port == 443 ? true : false)
+        {
+        }
+
+        public WebSocketServer(System.Net.IPAddress address, int port, bool secure)
+            : base(address, port, "/", secure)
+        {
+            init();
+        }
+
+        #endregion
+
+        #region Property
+
+        public IEnumerable<string> ServicePath
+        {
+            get
+            {
+                var url = BaseUri.IsAbsoluteUri
+                        ? BaseUri.ToString().TrimEnd('/')
+                        : String.Empty;
+                foreach (var path in _services.Path)
+                    yield return url + path;
+            }
+        }
+
+        public bool Sweeped
+        {
+            get
+            {
+                return _services.Sweeped;
+            }
+
+            set
+            {
+                _services.Sweeped = value;
+            }
+        }
+
+        #endregion
+
+        #region Private Method
+
+        private void init()
+        {
+            _services = new ServiceManager();
+        }
+
+        #endregion
+
+        #region Protected Method
+
+        protected override void AcceptWebSocket(TcpClient client)
+        {
+            var context = Ext.AcceptWebSocket(client, IsSecure);
+            var socket = context.WebSocket;
+            var path = Ext.UrlDecode(context.Path);
+
+            IServiceHost svcHost;
+            if (!_services.TryGetServiceHost(path, out svcHost))
+            {
+                socket.Close(HttpStatusCode.NotImplemented);
+                return;
+            }
+
+            if (BaseUri.IsAbsoluteUri)
+                socket.Url = new Uri(BaseUri, path);
+
+            svcHost.BindWebSocket(socket);
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void AddService<T>(string absPath)
+          where T : WebSocketService, new()
+        {
+            string msg;
+            if (!Ext.IsValidAbsolutePath(absPath, out msg))
+            {
+                Error(msg);
+                return;
+            }
+
+            var svcHost = new WebSocketServiceHost<T>();
+            svcHost.Uri = BaseUri.IsAbsoluteUri
+                        ? new Uri(BaseUri, absPath)
+                        : Ext.ToUri(absPath);
+            if (!Sweeped)
+                svcHost.Sweeped = Sweeped;
+
+            _services.Add(absPath, svcHost);
+        }
+
+        public void Broadcast(string data)
+        {
+            _services.Broadcast(data);
+        }
+
+        public override void Stop()
+        {
+            base.Stop();
+            _services.Stop();
+        }
+
+        #endregion
     }
-
-    public WebSocketServer(int port)
-      : this(System.Net.IPAddress.Any, port)
-    {
-    }
-
-    public WebSocketServer(string url)
-      : base(url)
-    {
-      if (BaseUri.AbsolutePath != "/")
-      {
-        var msg = "Must not contain the path component: " + url;
-        throw new ArgumentException(msg, "url");
-      }
-
-      init();
-    }
-
-    public WebSocketServer(int port, bool secure)
-      : this(System.Net.IPAddress.Any, port, secure)
-    {
-    }
-
-    public WebSocketServer(System.Net.IPAddress address, int port)
-      : this(address, port, port == 443 ? true : false)
-    {
-    }
-
-    public WebSocketServer(System.Net.IPAddress address, int port, bool secure)
-      : base(address, port, "/", secure)
-    {
-      init();
-    }
-
-    #endregion
-
-    #region Property
-
-    public IEnumerable<string> ServicePath {
-      get {
-        var url = BaseUri.IsAbsoluteUri
-                ? BaseUri.ToString().TrimEnd('/')
-                : String.Empty;
-        foreach (var path in _services.Path)
-          yield return url + path;
-      }
-    }
-
-    public bool Sweeped {
-      get {
-        return _services.Sweeped;
-      }
-
-      set {
-        _services.Sweeped = value;
-      }
-    }
-
-    #endregion
-
-    #region Private Method
-
-    private void init()
-    {
-      _services = new ServiceManager();
-    }
-
-    #endregion
-
-    #region Protected Method
-
-    protected override void AcceptWebSocket(TcpClient client)
-    {
-      var context = client.AcceptWebSocket(IsSecure);
-      var socket  = context.WebSocket;
-      var path    = context.Path.UrlDecode();
-
-      IServiceHost svcHost;
-      if (!_services.TryGetServiceHost(path, out svcHost))
-      {
-        socket.Close(HttpStatusCode.NotImplemented);
-        return;
-      }
-
-      if (BaseUri.IsAbsoluteUri)
-        socket.Url = new Uri(BaseUri, path);
-
-      svcHost.BindWebSocket(socket);
-    }
-
-    #endregion
-
-    #region Public Methods
-
-    public void AddService<T>(string absPath)
-      where T : WebSocketService, new()
-    {
-      string msg;
-      if (!absPath.IsValidAbsolutePath(out msg))
-      {
-        Error(msg);
-        return;
-      }
-
-      var svcHost = new WebSocketServiceHost<T>();
-      svcHost.Uri = BaseUri.IsAbsoluteUri
-                  ? new Uri(BaseUri, absPath)
-                  : absPath.ToUri();
-      if (!Sweeped)
-        svcHost.Sweeped = Sweeped;
-
-      _services.Add(absPath, svcHost);
-    }
-
-    public void Broadcast(string data)
-    {
-      _services.Broadcast(data);
-    }
-
-    public override void Stop()
-    {
-      base.Stop();
-      _services.Stop();
-    }
-
-    #endregion
-  }
 }

@@ -33,125 +33,160 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Principal;
 
-namespace WebSocketSharp.Net.Sockets {
+namespace WebSocketSharp.Net.Sockets
+{
 
-  public class TcpListenerWebSocketContext : WebSocketContext
-  {
-    private TcpClient        _client;
-    private bool             _isSecure;
-    private RequestHandshake _request;
-    private WebSocket        _socket;
-    private WsStream         _stream;
-
-    internal TcpListenerWebSocketContext(TcpClient client, bool secure)
+    public class TcpListenerWebSocketContext : WebSocketContext
     {
-      _client   = client;
-      _isSecure = secure;
-      _stream   = WsStream.CreateServerStream(client, secure);
-      _request  = RequestHandshake.Parse(_stream.ReadHandshake());
-      _socket   = new WebSocket(this);
-    }
+        private TcpClient _client;
+        private bool _isSecure;
+        private RequestHandshake _request;
+        private WebSocket _socket;
+        private WsStream _stream;
 
-    internal TcpClient Client {
-      get {
-        return _client;
-      }
-    }
+        internal TcpListenerWebSocketContext(TcpClient client, bool secure)
+        {
+            _client = client;
+            _isSecure = secure;
+            _stream = WsStream.CreateServerStream(client, secure);
+            _request = RequestHandshake.Parse(_stream.ReadHandshake());
+            _socket = new WebSocket(this);
+        }
 
-    internal WsStream Stream {
-      get {
-        return _stream;
-      }
-    }
+        internal TcpClient Client
+        {
+            get
+            {
+                return _client;
+            }
+        }
 
-    public override CookieCollection CookieCollection {
-      get {
-        throw new NotImplementedException();
-      }
-    }
+        internal WsStream Stream
+        {
+            get
+            {
+                return _stream;
+            }
+        }
 
-    public override NameValueCollection Headers {
-      get {
-        return _request.Headers;
-      }
-    }
+        public override CookieCollection CookieCollection
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-    public override bool IsAuthenticated {
-      get {
-        throw new NotImplementedException();
-      }
-    }
+        public override NameValueCollection Headers
+        {
+            get
+            {
+                return _request.Headers;
+            }
+        }
 
-    public override bool IsSecureConnection {
-      get {
-        return _isSecure;
-      }
-    }
+        public override bool IsAuthenticated
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-    public override bool IsLocal {
-      get {
-        throw new NotImplementedException();
-      }
-    }
+        public override bool IsSecureConnection
+        {
+            get
+            {
+                return _isSecure;
+            }
+        }
 
-    public override string Origin {
-      get {
-        return Headers["Origin"];
-      }
-    }
+        public override bool IsLocal
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-    public virtual string Path {
-      get {
-        return _request.RequestUri.GetAbsolutePath();
-      }
-    }
+        public override string Origin
+        {
+            get
+            {
+                return Headers["Origin"];
+            }
+        }
 
-    public override Uri RequestUri {
-      get {
-        return _request.RequestUri;
-      }
-    }
+        public virtual string Path
+        {
+            get
+            {
+                return Ext.GetAbsolutePath(_request.RequestUri);
+            }
+        }
 
-    public override string SecWebSocketKey {
-      get {
-        return Headers["Sec-WebSocket-Key"];
-      }
-    }
+        public override Uri RequestUri
+        {
+            get
+            {
+                return _request.RequestUri;
+            }
+        }
 
-    public override IEnumerable<string> SecWebSocketProtocols {
-      get {
-        return Headers.GetValues("Sec-WebSocket-Protocol");
-      }
-    }
+        public override string SecWebSocketKey
+        {
+            get
+            {
+                return Headers["Sec-WebSocket-Key"];
+            }
+        }
 
-    public override string SecWebSocketVersion {
-      get {
-        return Headers["Sec-WebSocket-Version"];
-      }
-    }
+        public override IEnumerable<string> SecWebSocketProtocols
+        {
+            get
+            {
+                return Headers.GetValues("Sec-WebSocket-Protocol");
+            }
+        }
 
-    public virtual IPEndPoint ServerEndPoint {
-      get {
-        return (IPEndPoint)_client.Client.LocalEndPoint;
-      }
-    }
+        public override string SecWebSocketVersion
+        {
+            get
+            {
+                return Headers["Sec-WebSocket-Version"];
+            }
+        }
 
-    public override IPrincipal User {
-      get {
-        throw new NotImplementedException();
-      }
-    }
+        public virtual IPEndPoint ServerEndPoint
+        {
+            get
+            {
+                return (IPEndPoint)_client.Client.LocalEndPoint;
+            }
+        }
 
-    public virtual IPEndPoint UserEndPoint {
-      get {
-        return (IPEndPoint)_client.Client.RemoteEndPoint;
-      }
-    }
+        public override IPrincipal User
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-    public override WebSocket WebSocket {
-      get {
-        return _socket;
-      }
+        public virtual IPEndPoint UserEndPoint
+        {
+            get
+            {
+                return (IPEndPoint)_client.Client.RemoteEndPoint;
+            }
+        }
+
+        public override WebSocket WebSocket
+        {
+            get
+            {
+                return _socket;
+            }
+        }
     }
-  }
 }

@@ -29,89 +29,100 @@
 using System;
 using System.Collections.Generic;
 
-namespace WebSocketSharp.Server {
+namespace WebSocketSharp.Server
+{
 
-  public class ServiceManager {
-  
-    #region Field
-
-    private Dictionary<string, IServiceHost> _services;
-    private bool                             _sweeped;
-
-    #endregion
-
-    #region Constructor
-
-    public ServiceManager()
+    public class ServiceManager
     {
-      _services = new Dictionary<string, IServiceHost>();
-      _sweeped  = true;
-    }
 
-    #endregion
+        #region Field
 
-    #region Properties
+        private Dictionary<string, IServiceHost> _services;
+        private bool _sweeped;
 
-    public int Count {
-      get {
-        return _services.Count;
-      }
-    } 
+        #endregion
 
-    public bool Sweeped {
-      get {
-        return _sweeped;
-      }
+        #region Constructor
 
-      set {
-        if (_sweeped ^ value)
+        public ServiceManager()
         {
-          _sweeped = value;
-          foreach (var svcHost in _services.Values)
-            svcHost.Sweeped = value;
+            _services = new Dictionary<string, IServiceHost>();
+            _sweeped = true;
         }
-      }
+
+        #endregion
+
+        #region Properties
+
+        public int Count
+        {
+            get
+            {
+                return _services.Count;
+            }
+        }
+
+        public bool Sweeped
+        {
+            get
+            {
+                return _sweeped;
+            }
+
+            set
+            {
+                if (_sweeped ^ value)
+                {
+                    _sweeped = value;
+                    foreach (var svcHost in _services.Values)
+                        svcHost.Sweeped = value;
+                }
+            }
+        }
+
+        public IEnumerable<string> Path
+        {
+            get
+            {
+                return _services.Keys;
+            }
+        }
+
+        public IEnumerable<IServiceHost> ServiceHost
+        {
+            get
+            {
+                return _services.Values;
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void Add(string absPath, IServiceHost svcHost)
+        {
+            _services.Add(Ext.UrlDecode(absPath), svcHost);
+        }
+
+        public void Broadcast(string data)
+        {
+            foreach (var svcHost in _services.Values)
+                svcHost.Broadcast(data);
+        }
+
+        public void Stop()
+        {
+            foreach (var svcHost in _services.Values)
+                svcHost.Stop();
+            _services.Clear();
+        }
+
+        public bool TryGetServiceHost(string absPath, out IServiceHost svcHost)
+        {
+            return _services.TryGetValue(absPath, out svcHost);
+        }
+
+        #endregion
     }
-
-    public IEnumerable<string> Path {
-      get {
-        return _services.Keys;
-      }
-    }
-
-    public IEnumerable<IServiceHost> ServiceHost {
-      get {
-        return _services.Values;
-      }
-    }
-
-    #endregion
-
-    #region Public Methods
-
-    public void Add(string absPath, IServiceHost svcHost)
-    {
-      _services.Add(absPath.UrlDecode(), svcHost);
-    }
-
-    public void Broadcast(string data)
-    {
-      foreach (var svcHost in _services.Values)
-        svcHost.Broadcast(data);
-    }
-
-    public void Stop()
-    {
-      foreach (var svcHost in _services.Values)
-        svcHost.Stop();
-      _services.Clear();
-    }
-
-    public bool TryGetServiceHost(string absPath, out IServiceHost svcHost)
-    {
-      return _services.TryGetValue(absPath, out svcHost);
-    }
-
-    #endregion
-  }
 }

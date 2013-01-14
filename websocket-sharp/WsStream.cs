@@ -37,251 +37,256 @@ using System.Text;
 using WebSocketSharp.Frame;
 using WebSocketSharp.Net.Security;
 
-namespace WebSocketSharp {
+namespace WebSocketSharp
+{
 
-  internal class WsStream : IDisposable
-  {
-    #region Fields
-
-    private Stream _innerStream;
-    private bool   _isSecure;
-    private Object _forRead;
-    private Object _forWrite;
-
-    #endregion
-
-    #region Private Constructor
-
-    private WsStream()
+    internal class WsStream : IDisposable
     {
-      _forRead  = new object();
-      _forWrite = new object();
-    }
+        #region Fields
 
-    #endregion
+        private Stream _innerStream;
+        private bool _isSecure;
+        private Object _forRead;
+        private Object _forWrite;
 
-    #region Public Constructors
+        #endregion
 
-    public WsStream(NetworkStream innerStream)
-      : this()
-    {
-      if (innerStream.IsNull())
-        throw new ArgumentNullException("innerStream");
+        #region Private Constructor
 
-      _innerStream = innerStream;
-      _isSecure    = false;
-    }
-
-    public WsStream(SslStream innerStream)
-      : this()
-    {
-      if (innerStream.IsNull())
-        throw new ArgumentNullException("innerStream");
-
-      _innerStream = innerStream;
-      _isSecure    = true;
-    }
-
-    #endregion
-
-    #region Properties
-
-    public bool DataAvailable {
-      get {
-        return _isSecure
-               ? ((SslStream)_innerStream).DataAvailable
-               : ((NetworkStream)_innerStream).DataAvailable;
-      }
-    }
-
-    public bool IsSecure {
-      get {
-        return _isSecure;
-      }
-    }
-
-    #endregion
-
-    #region Private Methods
-
-    private int read(byte[] buffer, int offset, int size)
-    {
-      var readLen = _innerStream.Read(buffer, offset, size);
-      if (readLen < size)
-      {
-        var msg = String.Format("Data can not be read from {0}.", _innerStream.GetType().Name);
-        throw new IOException(msg);
-      }
-
-      return readLen;
-    }
-
-    private int readByte()
-    {
-      return _innerStream.ReadByte();
-    }
-
-    private string[] readHandshake()
-    {
-      var buffer = new List<byte>();
-      while (true)
-      {
-        if (readByte().EqualsAndSaveTo('\r', buffer) &&
-            readByte().EqualsAndSaveTo('\n', buffer) &&
-            readByte().EqualsAndSaveTo('\r', buffer) &&
-            readByte().EqualsAndSaveTo('\n', buffer))
-          break;
-      }
-
-      return Encoding.UTF8.GetString(buffer.ToArray())
-             .Replace("\r\n", "\n").Replace("\n\n", "\n").TrimEnd('\n')
-             .Split('\n');
-    }
-
-    private void write(byte[] buffer, int offset, int count)
-    {
-      _innerStream.Write(buffer, offset, count);
-    }
-
-    private void writeByte(byte value)
-    {
-      _innerStream.WriteByte(value);
-    }
-
-    #endregion
-
-    #region Internal Methods
-
-    internal static WsStream CreateClientStream(TcpClient client, string host, bool secure)
-    {
-      var netStream = client.GetStream();
-      if (secure)
-      {
-        System.Net.Security.RemoteCertificateValidationCallback validationCb = (sender, certificate, chain, sslPolicyErrors) =>
+        private WsStream()
         {
-          // FIXME: Always returns true
-          return true;
-        };
-
-        var sslStream = new SslStream(netStream, false, validationCb);
-        sslStream.AuthenticateAsClient(host);
-
-        return new WsStream(sslStream);
-      }
-
-      return new WsStream(netStream);
-    }
-
-    internal static WsStream CreateServerStream(TcpClient client, bool secure)
-    {
-      var netStream = client.GetStream();
-      if (secure)
-      {
-        var sslStream = new SslStream(netStream, false);
-        var certPath  = ConfigurationManager.AppSettings["ServerCertPath"];
-        sslStream.AuthenticateAsServer(new X509Certificate2(certPath));
-
-        return new WsStream(sslStream);
-      }
-
-      return new WsStream(netStream);
-    }
-
-    internal static WsStream CreateServerStream(WebSocketSharp.Net.HttpListenerContext context)
-    {
-      var conn   = context.Connection;
-      var stream = conn.Stream;
-
-      return conn.IsSecure
-             ? new WsStream((SslStream)stream)
-             : new WsStream((NetworkStream)stream);
-    }
-
-    #endregion
-
-    #region Public Methods
-
-    public void Close()
-    {
-      _innerStream.Close();
-    }
-
-    public void Dispose()
-    {
-      _innerStream.Dispose();
-    }
-
-    public WsFrame ReadFrame()
-    {
-      lock (_forRead)
-      {
-        try
-        {
-          return WsFrame.Parse(_innerStream);
+            _forRead = new object();
+            _forWrite = new object();
         }
-        catch
+
+        #endregion
+
+        #region Public Constructors
+
+        public WsStream(NetworkStream innerStream)
+            : this()
         {
-          return null;
+            if (innerStream == null)
+                throw new ArgumentNullException("innerStream");
+
+            _innerStream = innerStream;
+            _isSecure = false;
         }
-      }
+
+        public WsStream(SslStream innerStream)
+            : this()
+        {
+            if (innerStream == null)
+                throw new ArgumentNullException("innerStream");
+
+            _innerStream = innerStream;
+            _isSecure = true;
+        }
+
+        #endregion
+
+        #region Properties
+
+        public bool DataAvailable
+        {
+            get
+            {
+                return _isSecure
+                       ? ((SslStream)_innerStream).DataAvailable
+                       : ((NetworkStream)_innerStream).DataAvailable;
+            }
+        }
+
+        public bool IsSecure
+        {
+            get
+            {
+                return _isSecure;
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private int read(byte[] buffer, int offset, int size)
+        {
+            var readLen = _innerStream.Read(buffer, offset, size);
+            if (readLen < size)
+            {
+                var msg = String.Format("Data can not be read from {0}.", _innerStream.GetType().Name);
+                throw new IOException(msg);
+            }
+
+            return readLen;
+        }
+
+        private int readByte()
+        {
+            return _innerStream.ReadByte();
+        }
+
+        private string[] readHandshake()
+        {
+            var buffer = new List<byte>();
+            while (true)
+            {
+                if (Ext.EqualsAndSaveTo(readByte(), '\r', buffer) &&
+                    Ext.EqualsAndSaveTo(readByte(), '\n', buffer) &&
+                    Ext.EqualsAndSaveTo(readByte(), '\r', buffer) &&
+                    Ext.EqualsAndSaveTo(readByte(), '\n', buffer))
+                    break;
+            }
+
+            return Encoding.UTF8.GetString(buffer.ToArray())
+                   .Replace("\r\n", "\n").Replace("\n\n", "\n").TrimEnd('\n')
+                   .Split('\n');
+        }
+
+        private void write(byte[] buffer, int offset, int count)
+        {
+            _innerStream.Write(buffer, offset, count);
+        }
+
+        private void writeByte(byte value)
+        {
+            _innerStream.WriteByte(value);
+        }
+
+        #endregion
+
+        #region Internal Methods
+
+        internal static WsStream CreateClientStream(TcpClient client, string host, bool secure)
+        {
+            var netStream = client.GetStream();
+            if (secure)
+            {
+                System.Net.Security.RemoteCertificateValidationCallback validationCb = (sender, certificate, chain, sslPolicyErrors) =>
+                {
+                    // FIXME: Always returns true
+                    return true;
+                };
+
+                var sslStream = new SslStream(netStream, false, validationCb);
+                sslStream.AuthenticateAsClient(host);
+
+                return new WsStream(sslStream);
+            }
+
+            return new WsStream(netStream);
+        }
+
+        internal static WsStream CreateServerStream(TcpClient client, bool secure)
+        {
+            var netStream = client.GetStream();
+            if (secure)
+            {
+                var sslStream = new SslStream(netStream, false);
+                var certPath = ConfigurationManager.AppSettings["ServerCertPath"];
+                sslStream.AuthenticateAsServer(new X509Certificate2(certPath));
+
+                return new WsStream(sslStream);
+            }
+
+            return new WsStream(netStream);
+        }
+
+        internal static WsStream CreateServerStream(WebSocketSharp.Net.HttpListenerContext context)
+        {
+            var conn = context.Connection;
+            var stream = conn.Stream;
+
+            return conn.IsSecure
+                   ? new WsStream((SslStream)stream)
+                   : new WsStream((NetworkStream)stream);
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void Close()
+        {
+            _innerStream.Close();
+        }
+
+        public void Dispose()
+        {
+            _innerStream.Dispose();
+        }
+
+        public WsFrame ReadFrame()
+        {
+            lock (_forRead)
+            {
+                try
+                {
+                    return WsFrame.Parse(_innerStream);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public void ReadFrameAsync(Action<WsFrame> completed)
+        {
+            WsFrame.ParseAsync(_innerStream, completed);
+        }
+
+        public string[] ReadHandshake()
+        {
+            lock (_forRead)
+            {
+                try
+                {
+                    return readHandshake();
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public bool WriteFrame(WsFrame frame)
+        {
+            lock (_forWrite)
+            {
+                try
+                {
+                    var buffer = frame.ToBytes();
+                    write(buffer, 0, buffer.Length);
+
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        public bool WriteHandshake(Handshake handshake)
+        {
+            lock (_forWrite)
+            {
+                try
+                {
+                    var buffer = handshake.ToBytes();
+                    write(buffer, 0, buffer.Length);
+
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        #endregion
     }
-
-    public void ReadFrameAsync(Action<WsFrame> completed)
-    {
-      WsFrame.ParseAsync(_innerStream, completed);
-    }
-
-    public string[] ReadHandshake()
-    {
-      lock (_forRead)
-      {
-        try
-        {
-          return readHandshake();
-        }
-        catch
-        {
-          return null;
-        }
-      }
-    }
-
-    public bool WriteFrame(WsFrame frame)
-    {
-      lock (_forWrite)
-      {
-        try
-        {
-          var buffer = frame.ToBytes();
-          write(buffer, 0, buffer.Length);
-
-          return true;
-        }
-        catch
-        {
-          return false;
-        }
-      }
-    }
-
-    public bool WriteHandshake(Handshake handshake)
-    {
-      lock (_forWrite)
-      {
-        try
-        {
-          var buffer = handshake.ToBytes();
-          write(buffer, 0, buffer.Length);
-
-          return true;
-        }
-        catch
-        {
-          return false;
-        }
-      }
-    }
-
-    #endregion
-  }
 }

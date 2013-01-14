@@ -32,52 +32,56 @@ using WebSocketSharp.Frame;
 
 namespace WebSocketSharp
 {
-  public class CloseEventArgs : MessageEventArgs
-  {
-    private ushort _code;
-    private string _reason;
-    private bool   _wasClean;
-
-    public ushort Code
+    public class CloseEventArgs : MessageEventArgs
     {
-      get {
-        return _code;
-      }
+        private ushort _code;
+        private string _reason;
+        private bool _wasClean;
+
+        public ushort Code
+        {
+            get
+            {
+                return _code;
+            }
+        }
+
+        public string Reason
+        {
+            get
+            {
+                return _reason;
+            }
+        }
+
+        public bool WasClean
+        {
+            get
+            {
+                return _wasClean;
+            }
+
+            set
+            {
+                _wasClean = value;
+            }
+        }
+
+        public CloseEventArgs(PayloadData data)
+            : base(Opcode.CLOSE, data)
+        {
+            _code = (ushort)CloseStatusCode.NO_STATUS_CODE;
+            _reason = String.Empty;
+            _wasClean = false;
+
+            if (data.Length >= 2)
+                _code = Ext.To<ushort>(Ext.SubArray(data.ToBytes(), 0, 2), ByteOrder.BIG);
+
+            if (data.Length > 2)
+            {
+                var buffer = Ext.SubArray(data.ToBytes(), 2, (int)(data.Length - 2));
+                _reason = Encoding.UTF8.GetString(buffer);
+            }
+        }
     }
-
-    public string Reason
-    {
-      get {
-        return _reason;
-      }
-    }
-
-    public bool WasClean
-    {
-      get {
-        return _wasClean;
-      }
-
-      set {
-        _wasClean = value;
-      }
-    }
-
-    public CloseEventArgs(PayloadData data)
-    : base(Opcode.CLOSE, data)
-    {
-      _code     = (ushort)CloseStatusCode.NO_STATUS_CODE;
-      _reason   = String.Empty;
-      _wasClean = false;
-
-      if (data.Length >= 2)
-        _code = data.ToBytes().SubArray(0, 2).To<ushort>(ByteOrder.BIG);
-
-      if (data.Length > 2)
-      {
-        var buffer = data.ToBytes().SubArray(2, (int)(data.Length - 2));
-        _reason = Encoding.UTF8.GetString(buffer);
-      }
-    }
-  }
 }

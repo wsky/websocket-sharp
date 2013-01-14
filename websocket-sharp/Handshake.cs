@@ -31,60 +31,60 @@ using System.Collections.Specialized;
 using System.Text;
 using WebSocketSharp.Net;
 
-namespace WebSocketSharp {
-
-  public abstract class Handshake {
-
-    #region Field
-
-    protected const string _crlf = "\r\n";
-
-    #endregion
-
-    #region Constructor
-
-    protected Handshake()
+namespace WebSocketSharp
+{
+    public abstract class Handshake
     {
-      ProtocolVersion = HttpVersion.Version11;
-      Headers         = new NameValueCollection();
+        #region Field
+
+        protected const string _crlf = "\r\n";
+
+        #endregion
+
+        #region Constructor
+
+        protected Handshake()
+        {
+            ProtocolVersion = HttpVersion.Version11;
+            Headers = new NameValueCollection();
+        }
+
+        #endregion
+
+        #region Properties
+
+        public NameValueCollection Headers { get; internal set; }
+        public Version ProtocolVersion { get; internal set; }
+
+        #endregion
+
+        #region Methods
+
+        public void AddHeader(string name, string value)
+        {
+            Headers.Add(name, value);
+        }
+
+        public string[] GetHeaderValues(string name)
+        {
+            return Headers.GetValues(name);
+        }
+
+        public bool HeaderExists(string name)
+        {
+            return Ext.Exists(Headers, name);
+        }
+
+        public bool HeaderExists(string name, string value)
+        {
+            return Ext.Exists(Headers, name, value);
+        }
+
+        public byte[] ToBytes()
+        {
+            return Encoding.UTF8.GetBytes(ToString());
+        }
+
+        #endregion
     }
-
-    #endregion
-
-    #region Properties
-
-    public NameValueCollection Headers         { get; internal set; }
-    public Version             ProtocolVersion { get; internal set; }
-
-    #endregion
-
-    #region Methods
-
-    public void AddHeader(string name, string value)
-    {
-      Headers.Add(name, value);
-    }
-
-    public string[] GetHeaderValues(string name)
-    {
-      return Headers.GetValues(name);
-    }
-
-    public bool HeaderExists(string name)
-    {
-      return Headers.Exists(name);
-    }
-
-    public bool HeaderExists(string name, string value)
-    {
-      return Headers.Exists(name, value);
-    }
-
-    public byte[] ToBytes()
-    {
-      return Encoding.UTF8.GetBytes(ToString());
-    }
-    
-    #endregion
-  }
 }
