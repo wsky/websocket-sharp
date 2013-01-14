@@ -2,6 +2,13 @@
 
 **websocket-sharp** is a C# implementation of the WebSocket protocol client & server.
 
+## changelog
+
+- 20120114 by wsky
+	- upgrad proj-file to vs2012
+	- make it support .net20 at branch:net20.
+	- add unittests
+
 ## Usage ##
 
 ### WebSocket client ###

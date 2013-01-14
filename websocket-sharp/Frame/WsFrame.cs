@@ -318,7 +318,7 @@ namespace WebSocketSharp.Frame {
 
       AsyncCallback callback = (ar) =>
       {
-        WsFrame frame;
+        WsFrame frame=null;
         try
         {
           var readLen = stream.EndRead(ar);
