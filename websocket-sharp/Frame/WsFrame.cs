@@ -72,7 +72,10 @@ namespace WebSocketSharp.Frame
         {
             Fin = fin;
             Opcode = opcode;
-            Masked = payloadData.Length != 0 ? mask : Mask.UNMASK;
+            //Masked = payloadData.Length != 0 ? mask : Mask.UNMASK;
+            //client->server always mask whatever having payload
+            //https://github.com/wsky/websocket-sharp/issues/2
+            Masked = mask;
             PayloadData = payloadData;
 
             init();

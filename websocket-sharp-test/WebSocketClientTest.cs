@@ -14,13 +14,43 @@ namespace WebSocketSharp
 
             WebSocket ws = new WebSocket("ws://localhost:8080/frontend");
             ws.OnMessage += (s, e) => { Console.WriteLine(e.Data); handle.Set(); };
-            ws.OnOpen += (s, e) => ws.Send(this.GetMessageBuffer());
+            ws.OnOpen += (s, e) => { Thread.Sleep(2000); ws.Send(this.GetMessageBuffer()); };
             ws.OnError += (s, e) => { Console.WriteLine("---- OnError:{0}", e.Message); handle.Set(); };
             ws.OnClose += (s, e) => { Console.WriteLine("---- OnClose:{0}|{1}", e.Code, e.Reason); handle.Set(); };
             ws.Origin = "csharp";
             ws.Connect();
 
             handle.WaitOne();
+        }
+
+        public void PingTest()
+        {
+            Exception error = null;
+            var handle = new EventWaitHandle(false, EventResetMode.AutoReset);
+
+            WebSocket ws = new WebSocket("ws://localhost:8080/frontend");
+            ws.OnClose += (s, e) =>
+            {
+                Console.WriteLine("---- OnClose:{0}|{1}", e.Code, e.Reason);
+                if (e.Code == 1002)
+                    error = new Exception(e.Reason);
+                handle.Set();
+            };
+            ws.OnOpen += (s, e) =>
+            {
+                if (ws.IsAlive)
+                {
+                    ws.Ping();
+                    handle.Set();
+                }
+            };
+            ws.Origin = "csharp";
+            ws.Connect();
+
+            handle.WaitOne();
+
+            if (error != null)
+                throw error;
         }
 
         private byte[] GetMessageBuffer()
