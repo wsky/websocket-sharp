@@ -83,6 +83,7 @@ namespace WebSocketSharp
         private Uri _uri;
         private SynchronizedCollection<WsFrame> _unTransmittedBuffer;
         private WsStream _wsStream;
+        private string _origin;
 
         #endregion
 
@@ -347,6 +348,15 @@ namespace WebSocketSharp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the WebSocket Origin.
+        /// </summary>
+        public string Origin
+        {
+            get { return this._origin; }
+            set { this._origin = value; }
+        }
+
         #endregion
 
         #region Events
@@ -563,7 +573,8 @@ namespace WebSocketSharp
             if (!Ext.IsNullOrEmpty(_protocols))
                 req.AddHeader("Sec-WebSocket-Protocol", _protocols);
             req.AddHeader("Sec-WebSocket-Version", _version);
-            req.AddHeader("Origin", "backend");
+            if (!string.IsNullOrEmpty(this._origin))
+                req.AddHeader("Origin", this._origin);
 
             return req;
         }

@@ -14,9 +14,10 @@ namespace WebSocketSharp
 
             WebSocket ws = new WebSocket("ws://localhost:8080/frontend");
             ws.OnMessage += (s, e) => { Console.WriteLine(e.Data); handle.Set(); };
-            ws.OnOpen += (s, e) => ws.Send(GetMessageBuffer());
+            ws.OnOpen += (s, e) => ws.Send(this.GetMessageBuffer());
             ws.OnError += (s, e) => { Console.WriteLine("---- OnError:{0}", e.Message); handle.Set(); };
             ws.OnClose += (s, e) => { Console.WriteLine("---- OnClose:{0}|{1}", e.Code, e.Reason); handle.Set(); };
+            ws.Origin = "csharp";
             ws.Connect();
 
             handle.WaitOne();
@@ -30,13 +31,13 @@ namespace WebSocketSharp
             binary.Write((byte)2);
             //to 8
             binary.Write((byte)' ');
-            binary.Write((byte)'b');
-            binary.Write((byte)'a');
+            binary.Write((byte)' ');
             binary.Write((byte)'c');
-            binary.Write((byte)'k');
-            binary.Write((byte)'e');
-            binary.Write((byte)'n');
-            binary.Write((byte)'d');
+            binary.Write((byte)'s');
+            binary.Write((byte)'h');
+            binary.Write((byte)'a');
+            binary.Write((byte)'r');
+            binary.Write((byte)'p');
             //format 1
             binary.Write((byte)1);
             //remaing 4
