@@ -1160,9 +1160,11 @@ namespace WebSocketSharp
                 {
                     close(CloseStatusCode.TOO_BIG, ex.Message);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    close(CloseStatusCode.ABNORMAL, "An exception has occured.");
+                    //HACK:close with 1006 when onMessage exception?
+                    close(CloseStatusCode.ABNORMAL
+                        , string.Format("An exception has occured: {0}", ex.Message));
                 }
             };
 
