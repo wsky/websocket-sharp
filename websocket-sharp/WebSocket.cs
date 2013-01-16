@@ -357,6 +357,11 @@ namespace WebSocketSharp
             set { this._origin = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the extra WebSocket handshake headers.
+        /// </summary>
+        public IDictionary<string, string> ExtraHeaders { get; set; }
+
         #endregion
 
         #region Events
@@ -575,6 +580,10 @@ namespace WebSocketSharp
             req.AddHeader("Sec-WebSocket-Version", _version);
             if (!string.IsNullOrEmpty(this._origin))
                 req.AddHeader("Origin", this._origin);
+            //extra headers
+            if (this.ExtraHeaders != null)
+                foreach (var i in this.ExtraHeaders)
+                    req.AddHeader(i.Key, i.Value);
 
             return req;
         }

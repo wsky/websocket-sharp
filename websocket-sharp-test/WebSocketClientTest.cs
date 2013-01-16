@@ -29,6 +29,7 @@ namespace WebSocketSharp
             var handle = new EventWaitHandle(false, EventResetMode.AutoReset);
 
             WebSocket ws = new WebSocket("ws://localhost:8080/frontend");
+            ws.ExtraHeaders = new Dictionary<string, string>() { { "id", "abc" } };
             ws.OnClose += (s, e) =>
             {
                 Console.WriteLine("---- OnClose:{0}|{1}", e.Code, e.Reason);
