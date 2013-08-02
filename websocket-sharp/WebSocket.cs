@@ -761,7 +761,7 @@ namespace WebSocketSharp
         {
             if (!Thread.CurrentThread.IsBackground)
                 if (_exitMessageLoop != null)
-                    _exitMessageLoop.WaitOne(5 * 1000);
+                    _exitMessageLoop.WaitOne(5 * 1000, false);
 
             if (closeConnection())
                 eventArgs.WasClean = true;
@@ -805,7 +805,7 @@ namespace WebSocketSharp
             if (!send(Fin.FINAL, Opcode.PING, buffer))
                 return false;
 
-            return _receivePong.WaitOne(millisecondsTimeout);
+            return _receivePong.WaitOne(millisecondsTimeout, false);
         }
 
         private void pong(PayloadData data)
