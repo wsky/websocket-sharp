@@ -644,7 +644,7 @@ namespace WebSocketSharp
             var temp = 0;
             while (readLen < length)
             {
-                temp = stream.Read(buffer, 0, length - readLen);
+                temp = stream.Read(buffer, readLen, length - readLen);
                 if (temp < 1)
                     break;
                 readLen += temp;
